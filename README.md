@@ -14,6 +14,16 @@ If you only use the AT method, there is no need to change the internal code of M
 <img width="809" alt="Modify1" src="https://github.com/user-attachments/assets/39a2258a-0a15-428f-9bf0-61db77a6fe1f" />
 <img width="714" alt="Modify2" src="https://github.com/user-attachments/assets/506a4550-8d57-4e35-a0fe-0d76a066bf34" />
 
+Citation
+===
+Please cite our paper when you use this code.
+
+Contact
+===
+Please contact zhangzeyang23@mails.ucas.ac.cn if you have any question about this work.
+
+
+
 
 
 
