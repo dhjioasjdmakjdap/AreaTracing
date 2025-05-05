@@ -8,7 +8,9 @@ In detail, the proposed AT method introduces a novel shadow testing algorithm to
 
 Usage method
 ===
-If you want to use the simple and complex scenarios provided in the paper, you only need to run the Main.m function in the Matlab code. The file provides the data for the simple and complex scenarios. If you want to use the data from OpenstreetMap, first download the data of the region you are interested in using GetOsm.py in the Python folder, and then use the provided Blender to convert the Osm data into the Mat format data and Stl format data required by the code.
+If you want to use the simple and complex scenarios provided in the paper, you only need to run the Main.m function in the Matlab code. The file provides the data for the simple and complex scenarios. If you want to use the data from OpenstreetMap, first download the data of the region you are interested in using GetOsm.py in the Python folder, and then use the provided Blender to convert the Osm data into the Mat format data and Stl format data required by the code. ImageMethod.m and SBRMethod.m are used to obtain channel Impulse Response (CIR) by using these two methods.
+
+If you only use the AT method, there is no need to change the internal code of Matlab. If you use the image method and the SBR method, two parts of the built-in code of matlab need to be changed.
 
 
 
