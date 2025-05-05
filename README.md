@@ -6,6 +6,8 @@ This paper proposes an innovative area-based tracing method named Area Tracing (
 In detail, the proposed AT method introduces a novel shadow testing algorithm to find the coverage area of each multipath signal. The shadow testing is performed by emitting rays to the edges of reflectors and analyzing the obstruction relationship with other reflectors. It includes shadow testing for Line-Of-Sight (LOS) and Non-Line-Of-Sight (NLOS) and can be used to process coverage areas of any order of reflected signals.
 ![Fig0](https://github.com/user-attachments/assets/ad6fde5c-813d-41b2-bd4c-d1eddff7dcf2)
 
+
+
 Usage method
 ===
 If you want to use the simple and complex scenarios provided in the paper, you only need to run the Main.m function in the Matlab code. The file provides the data for the simple and complex scenarios. If you want to use the data from OpenstreetMap, first download the data of the region you are interested in using GetOsm.py in the Python folder, and then use the provided Blender to convert the Osm data into the Mat format data and Stl format data required by the code. ImageMethod.m and SBRMethod.m are used to obtain channel Impulse Response (CIR) by using these two methods.
