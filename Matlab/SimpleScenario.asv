@@ -1,0 +1,256 @@
+clc,clear
+Density=32;
+%% 数据预处理
+P=[0,0]; % P点位于环境中间
+
+N_matFiles=length(matFilesEdge);
+
+
+% 保存完整的CIR
+AreaDivisionCirTotal32=cell(Density,Density,N_matFiles);
+
+load(filePathMat)
+L=PreData(L);
+% 初始线段如果在非端点处相交的话，将线段打断
+L = split_segments(L);
+x_min=0;
+x_max=0;
+y_min=0;
+y_max=0;
+N=size(L,1);
+for i=1:N
+    % x最小值
+    if L{i}{1,1}(1)<x_min
+        x_min = L{i}{1,1}(1);
+    end
+    if L{i}{1,2}(1)<x_min
+        x_min = L{i}{1,2}(1);
+    end
+
+    % x最大值
+    if L{i}{1,1}(1)>x_max
+        x_max = L{i}{1,1}(1);
+    end
+    if L{i}{1,2}(1)>x_max
+        x_max = L{i}{1,2}(1);
+    end
+
+    % y最小值
+    if L{i}{1,1}(2)<y_min
+        y_min = L{i}{1,1}(2);
+    end
+    if L{i}{1,2}(2)<y_min
+        y_min = L{i}{1,2}(2);
+    end
+
+    % y最大值
+    if L{i}{1,1}(2)>y_max
+        y_max = L{i}{1,1}(2);
+    end
+    if L{i}{1,2}(2)>y_max
+        y_max = L{i}{1,2}(2);
+    end
+end
+
+%% 给L增加边界
+AddEdge={
+    {[x_min-2,y_min-2],[x_max+2,y_min-2]};
+    {[x_max+2,y_min-2],[x_max+2,y_max+2]};
+    {[x_max+2,y_max+2],[x_min-2,y_max+2]};
+    {[x_min-2,y_max+2],[x_min-2,y_min-2]}};
+L=[L;AddEdge];
+Length=norm(AddEdge{1}{1}-AddEdge{1}{2});
+Width=norm(AddEdge{2}{1}-AddEdge{2}{2});
+% MaxSegment=sqrt(Length^2+Width^2);
+MaxSegment=10000;
+%% 找出直射区域
+tic
+% 计算出可视线段
+visible_segments = computeVisibleSegments(P, L);
+% 用发射点和可视线段的两个端点表示
+N=size(visible_segments,1);
+DirectArea=cell(N,1);
+for i=1:N
+    if isempty(visible_segments{i})
+        DirectArea{i}=[];
+        continue;
+    end
+    M=size(visible_segments{i},2);
+    for j=1:M/2
+       DirectArea{i}{1,j}={P,visible_segments{i}{1,2*j-1},visible_segments{i}{1,2*j}};
+    end
+end
+
+
+%% 迭代找到反射区域
+
+% 找到一次反射可视区域
+N=size(L,1);
+ReflectVisibelSegment=cell(N,1);
+ReflectVisibelArea=cell(N,1);
+for i=1:N
+    % 对每一个线段求反射区域
+    % 先求解imagePoint
+    imagePoint = computeImagePoint(P, L{i}{1}, L{i}{2});
+    M=size(visible_segments{i},2)/2;
+    LocalReflectVisibelSegment=cell(1,M);
+    LocalReflectVisibelArea=cell(1,M);
+    for j=1:M
+        Segment={visible_segments{i}{2*j-1},visible_segments{i}{2*j}};
+
+        [LocalReflectVisibelSegment{1,j},LocalReflectVisibelArea{1,j}]=ComputeReflectVisibelSegment(imagePoint,Segment,L,i,MaxSegment);
+        
+
+        ReflectVisibelSegment{i,1}=[ReflectVisibelSegment{i,1};LocalReflectVisibelSegment{1,j}];
+        ReflectVisibelArea{i,1}=[ReflectVisibelArea{i,1};LocalReflectVisibelArea{1,j}];
+    end
+end
+
+%% 找到二次反射区域
+SecondReflectVisibelSegment=cell(N,N);
+SecondReflectVisibelArea=cell(N,N);
+for i=1:N
+    if ~isempty(ReflectVisibelSegment{i})
+        for j=1:N-1
+            O=size(ReflectVisibelSegment{i}{j},2);
+            for k=1:O/2
+            % 在一次反射的基础上遍历得到二次
+               if i>j
+                    % 先计算得到ImagePoint
+                    if ~isempty(ReflectVisibelSegment{i}{j})
+                        FirstImagePoint = computeImagePoint(P, L{i}{1}, L{i}{2});
+                        SecondImagePoint = computeImagePoint(FirstImagePoint, L{j}{1}, L{j}{2});
+                        FirstSegment={ReflectVisibelSegment{i,1}{j,1}{1,2*k-1},ReflectVisibelSegment{i,1}{j,1}{1,2*k}}; 
+                        [LocalSecondReflectVisibelSegment,LocalSecondReflectVisibelArea]=ComputeReflectVisibelSegment(SecondImagePoint,FirstSegment,L,j,MaxSegment);
+                        SecondReflectVisibelSegment{i,j}=[SecondReflectVisibelSegment{i,j};LocalSecondReflectVisibelSegment];
+                        SecondReflectVisibelArea{i,j}=[SecondReflectVisibelArea{i,j};LocalSecondReflectVisibelArea];
+                    end
+                elseif i<=j
+                    % 先计算得到ImagePoint
+                    if ~isempty(ReflectVisibelSegment{i}{j})
+                        FirstImagePoint = computeImagePoint(P, L{i}{1}, L{i}{2});
+                        SecondImagePoint = computeImagePoint(FirstImagePoint, L{j+1}{1}, L{j+1}{2});
+                        FirstSegment={ReflectVisibelSegment{i,1}{j,1}{1,2*k-1},ReflectVisibelSegment{i,1}{j,1}{1,2*k}};
+                        [LocalSecondReflectVisibelSegment,LocalSecondReflectVisibelArea]=ComputeReflectVisibelSegment(SecondImagePoint,FirstSegment,L,j+1,MaxSegment);
+                        SecondReflectVisibelSegment{i,j+1}=[SecondReflectVisibelSegment{i,j+1};LocalSecondReflectVisibelSegment];
+                        SecondReflectVisibelArea{i,j+1}=[SecondReflectVisibelArea{i,j+1};LocalSecondReflectVisibelArea];
+                    end
+               end
+            end
+        end
+    end
+
+end
+%% 计算CIR
+
+% 去除添加边界的可视区域
+ReflectVisibelArea=ReflectVisibelArea(1:N-4);
+SecondReflectVisibelArea=SecondReflectVisibelArea(1:N-4,1:N-4);
+x=linspace(x_min-1,x_max+1,Density);
+y=linspace(y_min-1,y_max+1,Density);
+AreaDivision_Cir=cell(Density,Density);
+% 对一次反射区域进行预处理
+[Idx,Idx_Reflect]=PreReflectVisibelArea(ReflectVisibelArea);
+% 对二次反射区域进行预处理
+[Idx_Second,Idx_SecondReflect]=PreReflectSecondVisibelArea(SecondReflectVisibelArea);
+
+for i=1:Density
+    for j=1:Density
+        Point=[x(i),y(j)];
+        % 判断该点是否在直射区域内
+        [DirectCir,DirectDelay]=IsPointInDirectArea(P,Point, DirectArea);
+        % 判断该点在一次反射区域内
+        [FirstReflectCir,FirstReflectDelay]=IsPointInFirstReflectArea(P,Point, ReflectVisibelArea,L,Idx,Idx_Reflect);
+        % 判断该点在二次反射区域内
+        [SecondReflectCir,SecondReflectDelay]=IsPointInSecondReflectArea(P,Point, SecondReflectVisibelArea,L,Idx_Second,Idx_SecondReflect);
+        % 再将CIR合并
+        Cir=[DirectCir,FirstReflectCir,SecondReflectCir];
+        Delay=[DirectDelay,FirstReflectDelay,SecondReflectDelay];
+        AreaDivision_Cir{i,j}={Cir;Delay};
+    end
+end
+t_AreaTracing32(q,1)=toc;
+AreaDivisionCirTotal32(:,:,q)=AreaDivision_Cir;
+
+
+%% 进行RayTracing
+tic
+mapFileName = fullfile(folderPathStl, matFilesStl(q).name);
+stl=siteviewer("SceneModel",mapFileName);%导入地图
+tx = txsite("cartesian", ...
+        "AntennaPosition",[0;0;2], ...
+        "TransmitterFrequency",2.4e9,...
+         "TransmitterPower",5);%指定发射器位置，天线中心的位置
+pm = propagationModel("raytracing", ...
+        "CoordinateSystem","cartesian", ...
+        "Method","image", ...
+        "AngularSeparation","low", ...
+        "MaxNumReflections",2, ...
+        "SurfaceMaterial","concrete");%pm是指定传输过程中材料的参数和方法的参数，从而带入raytrace模型
+% pm.MaxNumDiffractions = 0;
+%% x与y分布100个点
+x=linspace(x_min-1,x_max+1,Density);
+y=linspace(y_min-1,y_max+1,Density);
+
+Ray_Cir=cell(Density,Density);
+for i=1:Density
+    for j=1:Density
+        %calculate ray cir
+        pos=[x(i);y(j);2];
+        rx = rxsite("cartesian", ...
+    "AntennaPosition",pos);
+        rays=raytrace(tx,rx,pm);
+        if ~isempty(rays{1,1})
+            % 如果不是空的话画图
+            % show(tx,"ShowAntennaHeight",false)
+            % show(rx,"ShowAntennaHeight",false)
+            % plot(rays{1,1},"Colormap",jet)
+            % 计算CIR
+            rx_rtChan = comm.RayTracingChannel(rays{1,1},tx,rx);%滤波信号通过由传播射线定义的多径衰减信道
+            rx_rtChan.SampleRate = 300e6;%采样频率
+            rx_rtChan.ReceiverVirtualVelocity = [0; 0; 0];
+            rx_rtChan.ChannelFiltering=false;
+            rx_CIR=rx_rtChan();
+            AbsCIR=abs(rx_CIR);
+            rx_cir=AbsCIR(1,:);
+            rx_Delay=zeros(1,length(rx_cir));
+            for l=1:length(rx_cir)
+                rx_Delay(l)=rays{1, 1}(1, l).PropagationDelay;
+            end
+        else
+            rx_cir=[];
+            rx_Delay=[];
+        end
+        %计算NRMSE
+        Ray_Cir{i,j}={rx_cir;rx_Delay};
+
+    end
+end
+close(stl);%关闭地图
+t_IMRay32(q,1)=toc;
+IMCirTotal32(:,:,q)=Ray_Cir;
+%% 计算NRMSE
+AreaCir=zeros(Density,Density);
+for i=1:Density
+    for j=1:Density
+        % 处理Inv
+
+        InvYlabel=AreaDivision_Cir{i,j}{1,1};
+        InvXlabel=AreaDivision_Cir{i,j}{2,1};
+        [DisInvCirXlabel,DisInvCirYlabel]=continuous_discrete_cir(InvXlabel,InvYlabel);
+        % 处理Ray
+        RayYlabel=Ray_Cir{i,j}{1,1};
+        RayXlabel=Ray_Cir{i,j}{2,1};
+        [DisRayCirXlabel,DisRayCirYlabel]=continuous_discrete_cir(RayXlabel,RayYlabel);
+
+        if isempty(RayYlabel)
+            AreaCir(i,j)=0;
+        else
+            AreaCir(i,j)=calc_nrmse(DisRayCirYlabel,DisInvCirYlabel);
+        end
+
+    end
+end
+% 对得到的NRMSE累加求均值
+MeanAT32(q,1)=mean(AreaCir,'all');
+
