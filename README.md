@@ -12,7 +12,8 @@ Channel Impulse Response Map (CIRM)
 We constructe a CIRM within the range of 0-400 ns as shown below. The figure illustrates the variation of the CIR amplitude over time.
 ![animation - 副本](https://github.com/user-attachments/assets/1eb195eb-28db-4470-b845-6378030d1ec4)
 Although we don't  consider dynamic scenarios in the article, some readers might be concerned about the changes in dynamic scenarios. Therefore, we rendered a map of the number of multipaths in a specific scenario when the transmitter changes. As you can see from the map, when the transmitter continuously changes in space, the number of multipaths also continuously changes in space.
-https://github.com/user-attachments/assets/3ab90bcf-5183-4f6e-9783-fe6f8d2e0eb1
+![moving_transmitter_animation](https://github.com/user-attachments/assets/2bebe425-4b53-48c4-a873-90c1a1a56bc5)
+
 
 
 
