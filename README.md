@@ -7,6 +7,12 @@ In detail, the proposed AT method introduces a novel shadow testing algorithm to
 <img width="1563" alt="36c1f5fe0dc5842f3803bdf95ae2dde" src="https://github.com/user-attachments/assets/fbe23f51-d0b9-4812-8d44-8781e6ec31c1" />
 
 
+Channel Impulse Response Map (CIRM)
+===
+We constructe a CIRM within the range of 0-400 ns as shown below. The figure illustrates the variation of the CIR amplitude over time.
+![animation - 副本](https://github.com/user-attachments/assets/1eb195eb-28db-4470-b845-6378030d1ec4)
+
+
 
 Usage method
 ===
